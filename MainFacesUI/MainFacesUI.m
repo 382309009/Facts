@@ -7,6 +7,9 @@
 //
 
 #import "MainFacesUI.h"
+#import "FacesCell.h"
+#import "DataCenter.h"
+
 
 @interface MainFacesUI () <UITableViewDataSource,UITableViewDelegate>{
     
@@ -16,6 +19,8 @@
     UIActivityIndicatorView *m_indicatorView;
     UIToolbar *m_toolBar;
     
+    NSArray *m_arrayDatas;
+    
 }
 
 @property (nonatomic, strong) UITableView   *m_tableView;
@@ -23,6 +28,7 @@
 @property (nonatomic, strong) UIBarButtonItem   *m_barButtonRefresh;
 @property (nonatomic, strong)  UIActivityIndicatorView  *m_indicatorView;
 @property (nonatomic, strong)  UIToolbar                *m_toolBar;
+@property (nonatomic, strong) NSArray                   *m_arrayDatas;
 
 - (void)initUI;
 
@@ -37,6 +43,7 @@
 @synthesize m_barButtonRefresh;
 @synthesize m_indicatorView;
 @synthesize m_toolBar;
+@synthesize m_arrayDatas;
 
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -54,6 +61,8 @@
     // Do any additional setup after loading the view.
     
     [self initUI];
+    
+    [self startUpdate];
     
 }
 
@@ -82,6 +91,24 @@
     [m_toolBar setItems:nil];
     [m_indicatorView startAnimating];
     
+    [[DataCenter sharedObject] getFactsDataWithCallback:^(NSDictionary *dictData) {
+        
+        NSLog(@"dictData : %@",dictData);
+        
+        NSString *_strTitle = [dictData objectForKey:KEY_TITLE];
+        m_lableTitle.text = _strTitle;
+        
+        NSArray *_arrayRows = [dictData objectForKey:KEY_ROWS];
+        
+        self.m_arrayDatas = _arrayRows;
+        
+        [m_tableView reloadData];
+        
+        
+        [self stopUpdate];
+        
+    }];
+    
 }
 
 - (void)stopUpdate{
@@ -101,8 +128,6 @@
     NSLog(@"refreshButtonClick");
     
     [self startUpdate];
-    
-    [self performSelector:@selector(stopUpdate) withObject:nil afterDelay:1.0];
     
 }
 
@@ -156,7 +181,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPat{
 	
-    return 50;
+    return 300;
     
 }
 
@@ -169,7 +194,7 @@
 // Customize the number of rows in the table view.
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 	
-    return 20;
+    return [m_arrayDatas count];
     
 }
 
@@ -181,29 +206,29 @@
     
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-    
+
     //old method
-    
-	cell.selectionStyle = UITableViewCellSelectionStyleNone;
+
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.backgroundView = nil;
     cell.backgroundColor = [UIColor clearColor];
+
+
+    UIView *_contentView = cell.contentView;
+    for(FacesCell *_cell in [_contentView subviews]){
+        [_cell removeFromSuperview];
+    }
+
     
-    /*
-     UIView *_contentView = cell.contentView;
-     for(EmailCell *_cell in [_contentView subviews]){
-     [_cell removeFromSuperview];
-     }
-     
-     
-     CGAffineTransform transform = CGAffineTransformIdentity;
-     transform = CGAffineTransformMakeRotation(M_PI/2);
-     contentView.transform = transform;
-     */
+    FacesCell *_faceCell = [[FacesCell alloc] initWithFrame:CGRectMake(0, 0, 320, 0)];
+    [_contentView addSubview:_faceCell];
     
+    NSDictionary *_dict = [m_arrayDatas objectAtIndex:indexPath.row];
     
-    cell.textLabel.text = @"hello";
-    
-    
+    [_faceCell setDataWithDict:_dict];
+
+
+
     return cell;
 }
 

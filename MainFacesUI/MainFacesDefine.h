@@ -18,4 +18,7 @@
 #define KEY_
 
 
+#define BASE_URL            @"http://thoughtworks-ios.herokuapp.com/facts.json"
+
+
 #endif
